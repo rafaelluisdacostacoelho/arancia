@@ -1,0 +1,134 @@
+---
+# Deployment for Todo Service
+# Manages the desired state of the application pods
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-service
+  namespace: todo-app
+  labels:
+    app: todo-service
+    version: v1
+spec:
+  # Number of pod replicas for high availability
+  replicas: 2
+  
+  # Selector to identify pods managed by this deployment
+  selector:
+    matchLabels:
+      app: todo-service
+  
+  # Strategy for updating pods (RollingUpdate is default)
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Maximum number of pods that can be created over the desired replicas
+      maxUnavailable: 0  # Ensure zero-downtime deployments
+  
+  # Pod template
+  template:
+    metadata:
+      labels:
+        app: todo-service
+        version: v1
+      annotations:
+        # Prometheus scraping annotations (optional - for future metrics)
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Security context for the pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: todo-service
+        # Container image - replace with your registry path
+        image: my-registry/todo-service:latest
+        imagePullPolicy: IfNotPresent
+        
+        # Container port
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        
+        # Environment variables from ConfigMap
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: PORT
+        - name: STORAGE_BACKEND
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: STORAGE_BACKEND
+        - name: BOLTDB_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: BOLTDB_PATH
+        
+        # Resource requests and limits
+        # Requests: Guaranteed resources
+        # Limits: Maximum resources allowed
+        resources:
+          requests:
+            cpu: "100m"      # 0.1 CPU core
+            memory: "128Mi"  # 128 MiB RAM
+          limits:
+            cpu: "500m"      # 0.5 CPU core maximum
+            memory: "256Mi"  # 256 MiB RAM maximum
+        
+        # Liveness probe: Checks if the container is alive
+        # Kubernetes will restart the container if this fails
+        # Note: Your service uses /health/live, not /healthz
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10  # Wait 10s after container starts
+          periodSeconds: 10        # Check every 10 seconds
+          timeoutSeconds: 5        # Timeout after 5 seconds
+          failureThreshold: 3      # Restart after 3 consecutive failures
+          successThreshold: 1      # Consider healthy after 1 success
+        
+        # Readiness probe: Checks if the container is ready to serve traffic
+        # Kubernetes will remove pod from service if this fails
+        # Note: Your service uses /health/ready, not /healthz
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5   # Start checking after 5 seconds
+          periodSeconds: 5         # Check every 5 seconds
+          timeoutSeconds: 3        # Timeout after 3 seconds
+          failureThreshold: 3      # Mark as not ready after 3 failures
+          successThreshold: 1      # Mark as ready after 1 success
+        
+        # Security context for the container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Set to true if you don't need write access
+          capabilities:
+            drop:
+            - ALL
+        
+        # Volume mounts (optional - only needed for BoltDB)
+        # Uncomment if using STORAGE_BACKEND=boltdb
+        # volumeMounts:
+        # - name: data
+        #   mountPath: /data
+      
+      # Volumes (optional - only needed for BoltDB)
+      # Uncomment if using STORAGE_BACKEND=boltdb
+      # volumes:
+      # - name: data
+      #   persistentVolumeClaim:
+      #     claimName: todo-pvc

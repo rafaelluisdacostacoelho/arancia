@@ -1,0 +1,10 @@
+---
+# Namespace for the Todo microservice application
+# This isolates the application resources from other workloads
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todo-app
+  labels:
+    app: todo-service
+    environment: production

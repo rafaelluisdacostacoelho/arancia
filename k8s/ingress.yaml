@@ -1,0 +1,40 @@
+---
+# Ingress for external access (OPTIONAL)
+# Requires an Ingress Controller (nginx, traefik, etc.)
+# Uncomment and configure if you need external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: todo-ingress
+  namespace: todo-app
+  labels:
+    app: todo-service
+  annotations:
+    # Nginx ingress annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # SSL/TLS redirect (uncomment if using HTTPS)
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate limiting (optional)
+    # nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  # Ingress class name (depends on your cluster setup)
+  ingressClassName: nginx
+  
+  # TLS configuration (optional - requires cert-manager or manual cert)
+  # tls:
+  # - hosts:
+  #   - todo.example.com
+  #   secretName: todo-tls-secret
+  
+  # Routing rules
+  rules:
+  - host: todo.example.com  # Replace with your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: todo-service
+            port:
+              number: 80

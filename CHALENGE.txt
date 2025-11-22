@@ -1,0 +1,115 @@
+Hi Rafel.
+Thanks for your time today.
+
+You were selected for the second round of the hiring process.
+
+## Kubernetes Microservice Challenge
+
+## Overview
+
+This challenge is designed to evaluate your backend development skills, including API design, containerization, and deployment using Kubernetes. You’ll build a simple microservice in Go, deploy it in a containerized environment, and demonstrate its functionality through a live demo or screencast.
+
+## Requirements
+
+You are expected to:
+* Develop a RESTful API in Go.
+* Containerize the application using Docker.
+* Deploy the service to a Kubernetes cluster (local or cloud).
+* Implement health checks and configuration management.
+* Optionally persist data using an embedded store.
+* Document your approach and provide a visual demonstration.
+
+## Task description
+
+## 1. Microservice Functionality
+
+Build a ToDo microservice with the following endpoints:
+
+Method: GET
+Endpoint: /todos
+Description: Retrieve all ToDo items
+
+Method: POST
+Endpoint: /todos
+Description: Create a new ToDo item
+
+Method: PUT
+Endpoint: /todos/{id}
+Description: Update an existing ToDo item
+
+Method: DELETE
+Endpoint: /todos/{id}
+Description: Delete a ToDo item
+
+Each ToDo item should include:
+* id: Unique identifier
+* title: String
+* completed: Boolean
+
+You may use in-memory storage or a lightweight embedded database (e.g., **BoltDB**) for persistence.
+
+## 2. Dockerization
+
+Create a Dockerfile that:
+* Uses an official Go base image.
+* Implements a multi-stage build to optimize image size.
+* Exposes port 8080.
+* Includes instructions to build and run the service.
+
+## 3. Kubernetes Deployment
+
+Provide Kubernetes manifests for:
+* Deployment:
+  - 2 replicas
+  - Resource limits (CPU/memory)
+* Service:
+  - Type: ClusterIP or LoadBalancer
+* ConfigMap:
+  - For environment variables (e.g., default port)
+* Health Probes:
+  - Readiness and Liveness checks
+
+Optional:
+* PersistentVolumeClaim for data persistence if using BoltDB or similar.
+
+## 4. Configuration & Health
+
+* Use ConfigMaps or Secrets for configuration management.
+* Implement readiness and liveness probes in your deployment manifest.
+* Ensure the service gracefully handles restarts and failures.
+
+## 5. Documentation & Demo
+
+Include a comprehensive 
+README.md with:
+* Project overview
+* API specification
+* Setup instructions (local and Kubernetes)
+* Docker build/run instructions
+* Kubernetes deployment steps
+* Design decisions and rationale
+
+Provide a demo in one of the following formats:
+* ✅ Live cluster URL with sample curl commands
+* ✅ Short video (2–3 min) showing:
+  - Docker image build and run
+  - Kubernetes deployment
+  - API endpoint usage
+
+Deliverables
+* ✅ Git repository (public or private) containing:
+  - Go source code
+  - Dockerfile
+  - Kubernetes YAML manifests
+  - README documentation
+* ✅ Visual proof:
+  - Screencast or live demo
+  - Sample API usage
+
+Evaluation Criteria
+* Code quality and structure
+* API design and RESTful principles
+* Docker and Kubernetes best practices
+* Configuration and health management
+* Clarity and completeness of documentation
+* Functionality and presentation of the demo

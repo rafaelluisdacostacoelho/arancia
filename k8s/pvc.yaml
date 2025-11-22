@@ -1,0 +1,32 @@
+---
+# PersistentVolumeClaim for BoltDB storage
+# This provides persistent storage for the embedded database
+# Only needed when STORAGE_BACKEND=boltdb in ConfigMap
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: todo-boltdb-pvc
+  namespace: todo-app
+  labels:
+    app: todo-service
+spec:
+  # Access mode - ReadWriteOnce means only one node can mount it at a time
+  # This is required for BoltDB since it uses file locking
+  accessModes:
+  - ReadWriteOnce
+  
+  # Storage class (optional - uses cluster default if not specified)
+  # Uncomment and set based on your cloud provider:
+  # AWS EKS: gp2, gp3, io1
+  # GKE: standard, pd-ssd, pd-balanced
+  # AKS: default, managed-premium, managed
+  # Minikube/Kind: standard
+  # storageClassName: standard
+  
+  # Storage size request
+  resources:
+    requests:
+      storage: 1Gi
+  
+  # Volume mode - Filesystem is required for file-based storage
+  volumeMode: Filesystem

@@ -1,0 +1,21 @@
+---
+# ConfigMap for Todo Service configuration
+# This stores environment-specific configuration that can be updated without rebuilding the image
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-config
+  namespace: todo-app
+  labels:
+    app: todo-service
+data:
+  # Server port - must match the container port
+  PORT: "8080"
+  
+  # Storage backend selection
+  # Options: "memory" (default, data lost on restart) or "boltdb" (persistent)
+  STORAGE_BACKEND: "memory"
+  
+  # BoltDB file path (only used if STORAGE_BACKEND=boltdb)
+  # Requires a PersistentVolumeClaim mounted at /data
+  BOLTDB_PATH: "/data/todos.db"

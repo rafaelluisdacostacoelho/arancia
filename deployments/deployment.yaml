@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-service
+  labels:
+    app: todo-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-service
+  template:
+    metadata:
+      labels:
+        app: todo-service
+    spec:
+      containers:
+      - name: todo-service
+        image: todo-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: port
+        - name: STORAGE_BACKEND
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: storage_backend
+        - name: BOLTDB_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: todo-config
+              key: boltdb_path
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: todo-pvc
+

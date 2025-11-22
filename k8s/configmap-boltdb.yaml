@@ -1,0 +1,22 @@
+---
+# ConfigMap for Todo Service with BoltDB backend
+# This configuration enables persistent storage using BoltDB
+# Use this instead of configmap.yaml when deploying with PVC
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-config
+  namespace: todo-app
+  labels:
+    app: todo-service
+    storage: boltdb
+data:
+  # Server port - must match the container port
+  PORT: "8080"
+  
+  # Storage backend - set to "boltdb" for persistent storage
+  STORAGE_BACKEND: "boltdb"
+  
+  # BoltDB file path - must match the volumeMount path
+  # The /data directory is mounted from the PersistentVolumeClaim
+  BOLTDB_PATH: "/data/todos.db"
