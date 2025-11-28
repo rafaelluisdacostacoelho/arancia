@@ -1,0 +1,593 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789abc",
+		"name": "ToDo Microservice API",
+		"description": "Complete API collection for testing the ToDo microservice.\n\nThis collection includes all available endpoints:\n- Health checks (liveness and readiness probes)\n- CRUD operations for ToDo items\n\n**Base URL Options:**\n- Local: http://localhost:8080\n- Docker: http://localhost:8080\n- Kubernetes (port-forward): http://localhost:8080\n\n**Usage:**\n1. Update the {{baseUrl}} variable to match your environment\n2. Run requests in order to see full workflow\n3. The collection uses variables to store created IDs automatically",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "Liveness Probe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health/live",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health",
+								"live"
+							]
+						},
+						"description": "Check if the service is alive and running.\n\n**Expected Response:**\n- Status: 200 OK\n- Body: \"OK\"\n\n**Use Case:**\nKubernetes uses this endpoint to determine if the pod should be restarted."
+					},
+					"response": []
+				},
+				{
+					"name": "Readiness Probe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health/ready",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health",
+								"ready"
+							]
+						},
+						"description": "Check if the service is ready to accept traffic.\n\n**Expected Response:**\n- Status: 200 OK (when ready)\n- Status: 503 Service Unavailable (when not ready)\n- Body: \"OK\" or \"Not Ready\"\n\n**Use Case:**\nKubernetes uses this endpoint to determine if traffic should be routed to the pod."
+					},
+					"response": []
+				}
+			],
+			"description": "Health check endpoints for Kubernetes probes."
+		},
+		{
+			"name": "ToDo Operations",
+			"item": [
+				{
+					"name": "Get All Todos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Content-Type is application/json\", function () {",
+									"    pm.response.to.have.header(\"Content-Type\");",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/todos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos"
+							]
+						},
+						"description": "Retrieve all todo items.\n\n**Expected Response:**\n- Status: 200 OK\n- Body: Array of todo objects\n\n**Response Schema:**\n```json\n[\n  {\n    \"id\": \"uuid\",\n    \"title\": \"string\",\n    \"completed\": boolean\n  }\n]\n```\n\n**Empty List:**\nReturns empty array [] when no todos exist."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Todo - Example 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has id, title, and completed fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('completed');",
+									"});",
+									"",
+									"pm.test(\"Todo is not completed by default\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.completed).to.be.false;",
+									"});",
+									"",
+									"// Save the ID for later use",
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"todoId1\", jsonData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Learn Go programming\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos"
+							]
+						},
+						"description": "Create a new todo item.\n\n**Request Body:**\n```json\n{\n  \"title\": \"string\" (required)\n}\n```\n\n**Expected Response:**\n- Status: 201 Created\n- Body: Created todo object with generated UUID\n\n**Response Schema:**\n```json\n{\n  \"id\": \"uuid\",\n  \"title\": \"string\",\n  \"completed\": false\n}\n```\n\n**Error Cases:**\n- 400 Bad Request: Missing or empty title\n- 400 Bad Request: Invalid JSON format"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Todo - Example 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Save the ID for later use",
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"todoId2\", jsonData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Deploy to Kubernetes\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos"
+							]
+						},
+						"description": "Create another todo item for testing."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Todo - Example 3",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Save the ID for later use",
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"todoId3\", jsonData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Write technical documentation\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos"
+							]
+						},
+						"description": "Create a third todo item for testing."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Todo - Mark as Completed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Todo is marked as completed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.completed).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"completed\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos/{{todoId1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos",
+								"{{todoId1}}"
+							]
+						},
+						"description": "Update a todo item to mark it as completed.\n\n**Request Body (Partial Update):**\n```json\n{\n  \"completed\": true\n}\n```\n\n**Expected Response:**\n- Status: 200 OK\n- Body: Updated todo object\n\n**Notes:**\n- Supports partial updates (can update only title or completed)\n- Original fields are preserved if not included in request\n\n**Error Cases:**\n- 404 Not Found: Todo ID doesn't exist\n- 400 Bad Request: Invalid JSON format"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Todo - Change Title",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Title was updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.title).to.include(\"Updated\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated: Deploy to Kubernetes cluster\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos/{{todoId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos",
+								"{{todoId2}}"
+							]
+						},
+						"description": "Update a todo item to change its title.\n\n**Request Body (Partial Update):**\n```json\n{\n  \"title\": \"New title text\"\n}\n```\n\n**Expected Response:**\n- Status: 200 OK\n- Body: Updated todo object"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Todo - Title and Completed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Both fields were updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.title).to.include(\"Completed\");",
+									"    pm.expect(jsonData.completed).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Completed: Write technical documentation\",\n  \"completed\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos/{{todoId3}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos",
+								"{{todoId3}}"
+							]
+						},
+						"description": "Update both title and completed status in a single request.\n\n**Request Body:**\n```json\n{\n  \"title\": \"string\",\n  \"completed\": boolean\n}\n```\n\n**Expected Response:**\n- Status: 200 OK\n- Body: Updated todo object"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Todo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test(\"Response body is empty\", function () {",
+									"    pm.expect(pm.response.text()).to.be.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/todos/{{todoId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos",
+								"{{todoId2}}"
+							]
+						},
+						"description": "Delete a todo item by ID.\n\n**Expected Response:**\n- Status: 204 No Content\n- Body: (empty)\n\n**Error Cases:**\n- 404 Not Found: Todo ID doesn't exist\n\n**Note:**\nAfter deletion, the todo cannot be retrieved and GET /todos will not include it."
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD operations for managing ToDo items."
+		},
+		{
+			"name": "Error Cases",
+			"item": [
+				{
+					"name": "Create Todo - Missing Title",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message mentions title\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"title\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos"
+							]
+						},
+						"description": "Test error handling when creating a todo without a title.\n\n**Expected Response:**\n- Status: 400 Bad Request\n- Body: \"title is required\""
+					},
+					"response": []
+				},
+				{
+					"name": "Update Todo - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message mentions not found\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"not found\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"completed\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/todos/00000000-0000-0000-0000-000000000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						},
+						"description": "Test error handling when updating a non-existent todo.\n\n**Expected Response:**\n- Status: 404 Not Found\n- Body: \"todo not found\""
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Todo - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message mentions not found\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"not found\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/todos/00000000-0000-0000-0000-000000000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"todos",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						},
+						"description": "Test error handling when deleting a non-existent todo.\n\n**Expected Response:**\n- Status: 404 Not Found\n- Body: \"todo not found\""
+					},
+					"response": []
+				}
+			],
+			"description": "Test cases for error handling scenarios."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "todoId1",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "todoId2",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "todoId3",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -45,9 +45,9 @@ spec:
       
       containers:
       - name: todo-service
-        # Container image - replace with your registry path
-        image: my-registry/todo-service:latest
-        imagePullPolicy: IfNotPresent
+        # Container image - using local image loaded into Kind
+        image: todo-service:latest
+        imagePullPolicy: Never
         
         # Container port
         ports:

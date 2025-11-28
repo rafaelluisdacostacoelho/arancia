@@ -109,32 +109,32 @@ arancia/
 ### Component Diagram
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   HTTP Client                       │
-└────────────────────┬────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│                   HTTP Client                   │
+└────────────────────┬────────────────────────────┘
                      │
                      ▼
-┌─────────────────────────────────────────────────────┐
-│                HTTP Server (Chi)                    │
-│  ┌──────────────┐  ┌──────────────┐                │
-│  │   Health     │  │     ToDo     │                │
-│  │   Handler    │  │   Handler    │                │
-│  └──────────────┘  └──────┬───────┘                │
-└────────────────────────────┼────────────────────────┘
-                             │
-                             ▼
-                   ┌─────────────────┐
-                   │   Repository    │ (Interface)
-                   └────────┬────────┘
+┌─────────────────────────────────────────────────┐
+│                HTTP Server (Chi)                │
+│  ┌──────────────┐  ┌──────────────┐             │
+│  │   Health     │  │     ToDo     │             │
+│  │   Handler    │  │   Handler    │             │
+│  └──────────────┘  └──────┬───────┘             │
+└───────────────────────────┼─────────────────────┘
                             │
-             ┌──────────────┴──────────────┐
-             ▼                             ▼
-    ┌────────────────┐            ┌────────────────┐
-    │  In-Memory     │            │    BoltDB      │
-    │  Repository    │            │  Repository    │
-    └────────────────┘            └────────┬───────┘
-                                           │
-                                           ▼
+                            ▼
+                  ┌─────────────────┐
+                  │   Repository    │ (Interface)
+                  └────────┬────────┘
+                           │
+            ┌──────────────┴──────────────┐
+            ▼                             ▼
+   ┌────────────────┐            ┌────────────────┐
+   │  In-Memory     │            │    BoltDB      │
+   │  Repository    │            │  Repository    │
+   └────────────────┘            └────────┬───────┘
+                                          │
+                                          ▼
                                   ┌────────────────┐
                                   │  todos.db      │
                                   │  (Persistent)  │
@@ -341,7 +341,7 @@ Not Ready
 
 ```bash
 # 1. Clone repository
-git clone <repository-url>
+git clone https://github.com/rafaelluisdacostacoelho/arancia.git
 cd arancia
 
 # 2. Run locally
@@ -469,28 +469,17 @@ docker run --rm -p 8080:8080 todo-service:latest
 docker run -d --name todo-api -p 8080:8080 todo-service:latest
 
 # With custom configuration
-docker run --rm -p 8080:8080 \
-  -e PORT=8080 \
-  -e STORAGE_BACKEND=memory \
-  todo-service:latest
+docker run --rm -p 8080:8080 -e PORT=8080 -e STORAGE_BACKEND=memory todo-service:latest
 ```
 
 #### With BoltDB Persistence
 
 ```bash
 # Run with volume mount
-docker run --rm -p 8080:8080 \
-  -e STORAGE_BACKEND=boltdb \
-  -e BOLTDB_PATH=/data/todos.db \
-  -v $(pwd)/data:/data \
-  todo-service:latest
+docker run --rm -p 8080:8080 -e STORAGE_BACKEND=boltdb -e BOLTDB_PATH=/data/todos.db -v $(pwd)/data:/data todo-service:latest
 
 # Run in background with named volume
-docker run -d --name todo-api -p 8080:8080 \
-  -e STORAGE_BACKEND=boltdb \
-  -e BOLTDB_PATH=/data/todos.db \
-  -v todo-data:/data \
-  todo-service:latest
+docker run -d --name todo-api -p 8080:8080 -e STORAGE_BACKEND=boltdb -e BOLTDB_PATH=/data/todos.db -v todo-data:/data todo-service:latest
 ```
 
 ### Container Management
@@ -555,7 +544,7 @@ docker-compose down -v      # Stop and remove volumes
 
 ### Deployment Options
 
-**Option A: In-Memory Storage** (Stateless, no PVC needed)
+**Option A: In-Memory Storage** (Stateless, no PVC needed)  
 **Option B: BoltDB with PVC** (Stateful, data persists)
 
 ### Option A: In-Memory Deployment
